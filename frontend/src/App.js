@@ -11,6 +11,8 @@ function App() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -20,7 +22,7 @@ function App() {
 
   const showAlert = useCallback((message, type = "success") => {
     setAlert({ message, type });
-    setTimeout(() => setAlert(null), 3500);
+    setTimeout(() => setAlert(null), 3000);
   }, []);
 
   const fetchReports = useCallback(async () => {
@@ -50,8 +52,8 @@ function App() {
   }, [showAlert]);
 
   useEffect(() => {
-    fetchReports();
-  }, [fetchReports]);
+    if (isAdmin) fetchReports();
+  }, [fetchReports, isAdmin]);
 
   const handleReportSubmit = async (formData) => {
     try {
@@ -61,11 +63,9 @@ function App() {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.message);
 
       showAlert("Laporan berhasil dikirim!", "success");
-      fetchReports();
       return true;
     } catch (error) {
       showAlert(error.message, "error");
@@ -95,16 +95,36 @@ function App() {
   return (
     <div className="app">
       <Header stats={stats} />
+
+      <div className="top-bar">
+        <button
+          className="btn btn-toggle"
+          onClick={() => setIsAdmin(!isAdmin)}
+        >
+          {isAdmin ? "← Kembali ke User" : "Masuk Admin Panel"}
+        </button>
+      </div>
+
       {alert && <Alert message={alert.message} type={alert.type} />}
 
-      <CreateReport onSubmit={handleReportSubmit} />
+      <main className="main">
+        {!isAdmin && (
+          <div className="content-card">
+            <CreateReport onSubmit={handleReportSubmit} />
+          </div>
+        )}
 
-      <ReportList
-        reports={reports}
-        loading={loading}
-        onStatusChange={handleStatusChange}
-        onDeleteReport={handleDeleteReport}
-      />
+        {isAdmin && (
+          <div className="content-card">
+            <ReportList
+              reports={reports}
+              loading={loading}
+              onStatusChange={handleStatusChange}
+              onDeleteReport={handleDeleteReport}
+            />
+          </div>
+        )}
+      </main>
     </div>
   );
 }
