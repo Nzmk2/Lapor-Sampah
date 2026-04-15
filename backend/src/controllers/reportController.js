@@ -10,7 +10,6 @@ exports.createReport = async (req, res) => {
     if (!title || !description || !address || !latitude || !longitude) {
       return res.status(400).json({ message: "Semua field wajib diisi" });
     }
-
     if (!req.file) {
       return res.status(400).json({ message: "Foto wajib diupload" });
     }
@@ -26,20 +25,17 @@ exports.createReport = async (req, res) => {
 
     const imageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
 
-    const sql = `
-      INSERT INTO reports (title, description, address, latitude, longitude, image_url, status)
-      VALUES (?, ?, ?, ?, ?, ?, 'PENDING')
-    `;
-
-    const [result] = await pool.execute(sql, [
-      title, description, address, latitude, longitude, imageUrl
-    ]);
+    const [result] = await pool.execute(
+      `INSERT INTO reports (title, description, address, latitude, longitude, image_url, status)
+       VALUES (?, ?, ?, ?, ?, ?, 'PENDING')`,
+      [title, description, address, latitude, longitude, imageUrl]
+    );
 
     const [rows] = await pool.execute("SELECT * FROM reports WHERE id = ?", [result.insertId]);
     return res.status(201).json(rows[0]);
   } catch (error) {
     console.error("createReport error:", error);
-    return res.status(500).json({ message: "Gagal membuat laporan" });
+    return res.status(500).json({ message: "Gagal membuat laporan", error: error.message });
   }
 };
 
@@ -48,7 +44,7 @@ exports.getReports = async (_req, res) => {
     const [rows] = await pool.execute("SELECT * FROM reports ORDER BY created_at DESC");
     return res.json(rows);
   } catch (error) {
-    return res.status(500).json({ message: "Gagal mengambil data" });
+    return res.status(500).json({ message: "Gagal mengambil data", error: error.message });
   }
 };
 
@@ -68,25 +64,18 @@ exports.updateReportStatus = async (req, res) => {
 
     const [rows] = await pool.execute("SELECT * FROM reports WHERE id = ?", [id]);
     if (!rows.length) return res.status(404).json({ message: "Laporan tidak ditemukan" });
-
     return res.json(rows[0]);
   } catch (error) {
-    return res.status(500).json({ message: "Gagal update status" });
+    return res.status(500).json({ message: "Gagal update status", error: error.message });
   }
 };
 
 exports.deleteReport = async (req, res) => {
   try {
     const { id } = req.params;
-
-    const [result] = await pool.execute("DELETE FROM reports WHERE id = ?", [id]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Laporan tidak ditemukan" });
-    }
-
+    await pool.execute("DELETE FROM reports WHERE id = ?", [id]);
     return res.json({ message: "Laporan berhasil dihapus" });
   } catch (error) {
-    return res.status(500).json({ message: "Gagal menghapus laporan" });
+    return res.status(500).json({ message: "Gagal hapus laporan", error: error.message });
   }
 };

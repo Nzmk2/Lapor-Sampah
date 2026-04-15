@@ -41,8 +41,11 @@ function CreateReport({ onSubmit }) {
           }));
         },
         (error) => {
-          console.error("Error getting location:", error);
-          alert("Gagal mendapatkan lokasi. Pastikan Anda memberikan izin akses lokasi.");
+          console.error("Error getting location:", error.code, error.message);
+          if (error.code === 1) alert("Izin lokasi ditolak.");
+          else if (error.code === 2) alert("Lokasi tidak tersedia.");
+          else if (error.code === 3) alert("Timeout saat ambil lokasi.");
+          else alert("Gagal mendapatkan lokasi.");
         }
       );
     } else {

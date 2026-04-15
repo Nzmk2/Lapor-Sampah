@@ -52,8 +52,8 @@ function App() {
   }, [showAlert]);
 
   useEffect(() => {
-    if (isAdmin) fetchReports();
-  }, [fetchReports, isAdmin]);
+    fetchReports();
+  }, [fetchReports]);
 
   const handleReportSubmit = async (formData) => {
     try {

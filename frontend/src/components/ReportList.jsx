@@ -12,9 +12,9 @@ function ReportList({ reports, loading, onStatusChange, onDeleteReport }) {
 
   const sortedReports = [...filteredReports].sort((a, b) => {
     if (sortBy === "newest") {
-      return new Date(b.createdAt) - new Date(a.createdAt);
+      return new Date(b.created_at) - new Date(a.created_at);
     } else if (sortBy === "oldest") {
-      return new Date(a.createdAt) - new Date(b.createdAt);
+      return new Date(a.created_at) - new Date(b.created_at);
     }
     return 0;
   });
