@@ -66,9 +66,10 @@ function App() {
       if (!res.ok) throw new Error(data.message);
 
       showAlert("Laporan berhasil dikirim!", "success");
+      await fetchReports(); // <-- AUTO REFRESH DATA
       return true;
     } catch (error) {
-      showAlert(error.message, "error");
+      showAlert(error.message || "Gagal mengirim laporan", "error");
       return false;
     }
   };
