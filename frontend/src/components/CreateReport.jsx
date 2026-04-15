@@ -30,27 +30,64 @@ function CreateReport({ onSubmit }) {
     }
   };
 
-  const handleGetLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setForm(prev => ({
-            ...prev,
-            latitude: position.coords.latitude.toString(),
-            longitude: position.coords.longitude.toString()
-          }));
-        },
-        (error) => {
-          console.error("Error getting location:", error.code, error.message);
-          if (error.code === 1) alert("Izin lokasi ditolak.");
-          else if (error.code === 2) alert("Lokasi tidak tersedia.");
-          else if (error.code === 3) alert("Timeout saat ambil lokasi.");
-          else alert("Gagal mendapatkan lokasi.");
-        }
-      );
-    } else {
-      alert("Browser Anda tidak mendukung geolocation");
+  const handleGetLocation = async () => {
+    if (!navigator.geolocation) {
+      alert("Browser tidak mendukung geolocation.");
+      return;
     }
+
+    setLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          // isi lat/lng otomatis
+          setForm((prev) => ({
+            ...prev,
+            latitude: lat.toFixed(7),
+            longitude: lng.toFixed(7),
+          }));
+
+          // reverse geocoding -> isi alamat otomatis
+          const resp = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
+          );
+          const data = await resp.json();
+
+          if (data && data.display_name) {
+            setForm((prev) => ({
+              ...prev,
+              latitude: lat.toFixed(7),
+              longitude: lng.toFixed(7),
+              address: data.display_name,
+            }));
+          }
+
+          alert("Lokasi berhasil diambil.");
+        } catch (err) {
+          console.error(err);
+          alert("Lokasi berhasil diambil, tapi alamat otomatis gagal. Isi alamat manual ya.");
+        } finally {
+          setLoading(false);
+        }
+      },
+      (error) => {
+        console.error("Geolocation error:", error.code, error.message);
+        if (error.code === 1) alert("Izin lokasi ditolak. Ubah permission browser jadi Allow.");
+        else if (error.code === 2) alert("Lokasi tidak tersedia. Aktifkan GPS/WiFi.");
+        else if (error.code === 3) alert("Timeout ambil lokasi. Coba lagi.");
+        else alert("Gagal mengambil lokasi.");
+        setLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      }
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -60,7 +97,23 @@ function CreateReport({ onSubmit }) {
       alert("Semua field harus diisi dan foto harus dipilih");
       return;
     }
+  
+  const lat = Number(form.latitude);
+  const lng = Number(form.longitude);
 
+  if (Number.isNaN(lat) || Number.isNaN(lng)) {
+    alert("Latitude/Longitude harus berupa angka.");
+    return;
+  }
+  if (lat < -90 || lat > 90) {
+    alert("Latitude harus antara -90 sampai 90.");
+    return;
+  }
+  if (lng < -180 || lng > 180) {
+    alert("Longitude harus antara -180 sampai 180.");
+    return;
+  }
+  
     setLoading(true);
 
     const formData = new FormData();
@@ -149,12 +202,11 @@ function CreateReport({ onSubmit }) {
             <div className="input-group">
               <input
                 id="latitude"
-                type="number"
+                type="text"
                 name="latitude"
                 value={form.latitude}
                 onChange={handleInputChange}
-                placeholder="Latitude"
-                step="0.000001"
+                placeholder="-6.9021600"
                 required
               />
             </div>
@@ -165,12 +217,11 @@ function CreateReport({ onSubmit }) {
             <div className="input-group">
               <input
                 id="longitude"
-                type="number"
+                type="text"
                 name="longitude"
                 value={form.longitude}
                 onChange={handleInputChange}
-                placeholder="Longitude"
-                step="0.000001"
+                placeholder="107.6191000"
                 required
               />
             </div>
