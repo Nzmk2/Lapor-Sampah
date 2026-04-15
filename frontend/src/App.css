@@ -1,0 +1,32 @@
+body {
+  margin: 0;
+  background: #f5f7fb;
+  font-family: Arial, sans-serif;
+}
+.container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 12px;
+}
+.card {
+  background: white;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+input, textarea, button {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+.btn-group {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+button {
+  cursor: pointer;
+}
