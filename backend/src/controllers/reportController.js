@@ -28,8 +28,9 @@ exports.createReport = async (req, res) => {
 
     const sql = `
       INSERT INTO reports (title, description, address, latitude, longitude, image_url, status)
-      VALUES (?, ?, ?, ?, ?, ?, 'OPEN')
+      VALUES (?, ?, ?, ?, ?, ?, 'PENDING')
     `;
+
     const [result] = await pool.execute(sql, [
       title, description, address, latitude, longitude, imageUrl
     ]);
@@ -38,7 +39,7 @@ exports.createReport = async (req, res) => {
     return res.status(201).json(rows[0]);
   } catch (error) {
     console.error("createReport error:", error);
-    return res.status(500).json({ message: "Gagal membuat laporan", error: error.message });
+    return res.status(500).json({ message: "Gagal membuat laporan" });
   }
 };
 
@@ -47,7 +48,7 @@ exports.getReports = async (_req, res) => {
     const [rows] = await pool.execute("SELECT * FROM reports ORDER BY created_at DESC");
     return res.json(rows);
   } catch (error) {
-    return res.status(500).json({ message: "Gagal mengambil data", error: error.message });
+    return res.status(500).json({ message: "Gagal mengambil data" });
   }
 };
 
@@ -56,7 +57,7 @@ exports.updateReportStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!["OPEN", "IN_PROGRESS", "DONE"].includes(status)) {
+    if (!["PENDING", "IN_PROGRESS", "DONE"].includes(status)) {
       return res.status(400).json({ message: "Status tidak valid" });
     }
 
@@ -70,6 +71,22 @@ exports.updateReportStatus = async (req, res) => {
 
     return res.json(rows[0]);
   } catch (error) {
-    return res.status(500).json({ message: "Gagal update status", error: error.message });
+    return res.status(500).json({ message: "Gagal update status" });
+  }
+};
+
+exports.deleteReport = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [result] = await pool.execute("DELETE FROM reports WHERE id = ?", [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Laporan tidak ditemukan" });
+    }
+
+    return res.json({ message: "Laporan berhasil dihapus" });
+  } catch (error) {
+    return res.status(500).json({ message: "Gagal menghapus laporan" });
   }
 };

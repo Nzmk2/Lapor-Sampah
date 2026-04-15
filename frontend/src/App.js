@@ -1,56 +1,79 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import "./App.css";
+import Header from "./components/Header";
+import CreateReport from "./components/CreateReport";
+import ReportList from "./components/ReportList";
+import Alert from "./components/Alert";
 
 const API_BASE = "/api";
 
 function App() {
   const [reports, setReports] = useState([]);
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    address: "",
-    latitude: "",
-    longitude: ""
+  const [loading, setLoading] = useState(true);
+  const [alert, setAlert] = useState(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    inProgress: 0,
+    completed: 0
   });
-  const [photo, setPhoto] = useState(null);
-  const [loading, setLoading] = useState(false);
 
-  const fetchReports = async () => {
-    const res = await fetch(`${API_BASE}/reports`);
-    const data = await res.json();
-    setReports(data);
-  };
+  const showAlert = useCallback((message, type = "success") => {
+    setAlert({ message, type });
+    setTimeout(() => setAlert(null), 3500);
+  }, []);
+
+  const fetchReports = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE}/reports`);
+
+      if (!res.ok) throw new Error("Failed fetch");
+
+      const data = await res.json();
+      const reportsData = Array.isArray(data) ? data : [];
+
+      setReports(reportsData);
+
+      setStats({
+        total: reportsData.length,
+        pending: reportsData.filter(r => r.status === "PENDING").length,
+        inProgress: reportsData.filter(r => r.status === "IN_PROGRESS").length,
+        completed: reportsData.filter(r => r.status === "DONE").length
+      });
+
+    } catch (error) {
+      showAlert("Gagal memuat laporan", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [showAlert]);
 
   useEffect(() => {
     fetchReports();
-  }, []);
+  }, [fetchReports]);
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleReportSubmit = async (formData) => {
+    try {
+      const res = await fetch(`${API_BASE}/reports`, {
+        method: "POST",
+        body: formData
+      });
 
-    const fd = new FormData();
-    Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-    if (photo) fd.append("photo", photo);
+      const data = await res.json();
 
-    const res = await fetch(`${API_BASE}/reports`, {
-      method: "POST",
-      body: fd
-    });
-    const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
 
-    if (!res.ok) {
-      alert(data.message || "Gagal kirim laporan");
-      setLoading(false);
-      return;
+      showAlert("Laporan berhasil dikirim!", "success");
+      fetchReports();
+      return true;
+    } catch (error) {
+      showAlert(error.message, "error");
+      return false;
     }
-
-    setForm({ title: "", description: "", address: "", latitude: "", longitude: "" });
-    setPhoto(null);
-    await fetchReports();
-    setLoading(false);
   };
 
-  const changeStatus = async (id, status) => {
+  const handleStatusChange = async (id, status) => {
     await fetch(`${API_BASE}/reports/${id}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -59,63 +82,29 @@ function App() {
     fetchReports();
   };
 
+  const handleDeleteReport = async (id) => {
+    if (!window.confirm("Yakin hapus?")) return;
+
+    await fetch(`${API_BASE}/reports/${id}`, {
+      method: "DELETE"
+    });
+
+    fetchReports();
+  };
+
   return (
-    <div className="container">
-      <h1>LaporSampah - Pelaporan Sampah Liar</h1>
+    <div className="app">
+      <Header stats={stats} />
+      {alert && <Alert message={alert.message} type={alert.type} />}
 
-      <form className="card" onSubmit={onSubmit}>
-        <h2>Buat Laporan</h2>
-        <input
-          placeholder="Judul laporan"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-          required
-        />
-        <textarea
-          placeholder="Deskripsi"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          required
-        />
-        <input
-          placeholder="Alamat"
-          value={form.address}
-          onChange={(e) => setForm({ ...form, address: e.target.value })}
-          required
-        />
-        <input
-          placeholder="Latitude (contoh: -6.2000000)"
-          value={form.latitude}
-          onChange={(e) => setForm({ ...form, latitude: e.target.value })}
-          required
-        />
-        <input
-          placeholder="Longitude (contoh: 106.8166667)"
-          value={form.longitude}
-          onChange={(e) => setForm({ ...form, longitude: e.target.value })}
-          required
-        />
-        <input type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files[0])} required />
-        <button type="submit" disabled={loading}>
-          {loading ? "Mengirim..." : "Kirim Laporan"}
-        </button>
-      </form>
+      <CreateReport onSubmit={handleReportSubmit} />
 
-      <h2>Daftar Laporan</h2>
-      {reports.map((r) => (
-        <div className="card" key={r.id}>
-          <h3>{r.title}</h3>
-          <p><b>Status:</b> {r.status}</p>
-          <p>{r.description}</p>
-          <p><b>Alamat:</b> {r.address}</p>
-          <p><b>Koordinat:</b> {r.latitude}, {r.longitude}</p>
-          <a href={r.image_url} target="_blank" rel="noreferrer">Lihat Foto</a>
-          <div className="btn-group">
-            <button onClick={() => changeStatus(r.id, "IN_PROGRESS")}>IN_PROGRESS</button>
-            <button onClick={() => changeStatus(r.id, "DONE")}>DONE</button>
-          </div>
-        </div>
-      ))}
+      <ReportList
+        reports={reports}
+        loading={loading}
+        onStatusChange={handleStatusChange}
+        onDeleteReport={handleDeleteReport}
+      />
     </div>
   );
 }
