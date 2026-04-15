@@ -98,7 +98,7 @@ function App() {
 
       <div className="top-bar">
         <button
-          className="btn btn-toggle"
+          className={`btn-toggle${isAdmin ? " is-admin" : ""}`}
           onClick={() => setIsAdmin(!isAdmin)}
         >
           {isAdmin ? "← Kembali ke User" : "Masuk Admin Panel"}

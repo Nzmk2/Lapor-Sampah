@@ -21,9 +21,11 @@ function ReportList({ reports, loading, onStatusChange, onDeleteReport }) {
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Memuat laporan...</p>
+      <div className="card">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Memuat laporan...</p>
+        </div>
       </div>
     );
   }
@@ -35,11 +37,14 @@ function ReportList({ reports, loading, onStatusChange, onDeleteReport }) {
           <span className="card-icon">📋</span>
           Daftar Laporan Sampah
         </h2>
+        <p className="card-subtitle">
+          Kelola dan pantau laporan sampah yang masuk dari masyarakat
+        </p>
       </div>
 
       <div className="report-controls">
         <div className="filter-group">
-          <label>Filter Status:</label>
+          <label>Filter:</label>
           <div className="filter-buttons">
             <button
               className={`filter-btn ${filter === "ALL" ? "active" : ""}`}
@@ -86,7 +91,7 @@ function ReportList({ reports, loading, onStatusChange, onDeleteReport }) {
         <div className="empty-state">
           <div className="empty-icon">📭</div>
           <h3>Tidak Ada Laporan</h3>
-          <p>Belum ada laporan dengan filter yang dipilih. Buat laporan baru untuk memulai!</p>
+          <p>Belum ada laporan dengan filter yang dipilih.</p>
         </div>
       ) : (
         <div className="reports-grid">

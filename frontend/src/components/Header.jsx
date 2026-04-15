@@ -5,7 +5,7 @@ function Header({ stats }) {
     <header className="app-header">
       <div className="header-container">
         <div className="header-brand">
-          <div className="brand-icon">🗑️</div>
+          <div className="brand-icon-wrap">🗑️</div>
           <div>
             <h1 className="brand-title">LaporSampah</h1>
             <p className="brand-subtitle">Platform Pelaporan Sampah Liar Indonesia</p>
@@ -16,7 +16,7 @@ function Header({ stats }) {
           <div className="stat-card">
             <div className="stat-icon">📊</div>
             <div className="stat-content">
-              <div className="stat-label">Total Laporan</div>
+              <div className="stat-label">Total</div>
               <div className="stat-value">{stats.total}</div>
             </div>
           </div>
@@ -30,7 +30,7 @@ function Header({ stats }) {
           <div className="stat-card">
             <div className="stat-icon">🔧</div>
             <div className="stat-content">
-              <div className="stat-label">Sedang Dikerjakan</div>
+              <div className="stat-label">Diproses</div>
               <div className="stat-value">{stats.inProgress}</div>
             </div>
           </div>

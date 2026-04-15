@@ -93,7 +93,9 @@ function CreateReport({ onSubmit }) {
           <span className="card-icon">📝</span>
           Buat Laporan Baru
         </h2>
-        <p className="card-subtitle">Laporkan lokasi sampah liar yang Anda temukan agar dapat ditangani segera</p>
+        <p className="card-subtitle">
+          Laporkan lokasi sampah liar yang Anda temukan agar dapat segera ditangani
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="form">
@@ -172,10 +174,16 @@ function CreateReport({ onSubmit }) {
           </div>
         </div>
 
-        <button type="button" className="btn btn-secondary" onClick={handleGetLocation}>
-          <span className="btn-icon">📍</span>
-          Ambil Lokasi Saya
-        </button>
+        <div>
+          <button
+            type="button"
+            className="btn-get-location"
+            onClick={handleGetLocation}
+          >
+            <span>📍</span>
+            Ambil Lokasi Saya
+          </button>
+        </div>
 
         <div className="form-group full-width">
           <label htmlFor="photo">Foto Bukti</label>
