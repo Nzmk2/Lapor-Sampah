@@ -21,7 +21,18 @@ function ReportCard({ report, onStatusChange, onDelete, onPriorityChange }) {
     return map[status] || { cls: "badge-pending", dot: true, label: status };
   };
 
+  const getPriorityMeta = (value) => {
+    const map = {
+      LOW: { icon: "🟢", label: "Rendah", cls: "priority-low" },
+      MEDIUM: { icon: "🟡", label: "Sedang", cls: "priority-medium" },
+      HIGH: { icon: "🔴", label: "Tinggi", cls: "priority-high" }
+    };
+    return map[value] || map.MEDIUM;
+  };
+
   const badge = getStatusBadge(report.status);
+  const priorityValue = report.priority || "MEDIUM";
+  const priorityMeta = getPriorityMeta(priorityValue);
 
   return (
     <div className="report-card">
@@ -66,15 +77,22 @@ function ReportCard({ report, onStatusChange, onDelete, onPriorityChange }) {
           {Number(report.latitude).toFixed(6)}, {Number(report.longitude).toFixed(6)}
         </span>
 
-        <div style={{ marginTop: 8 }}>
-          <label style={{ fontSize: 12, marginRight: 8 }}>Prioritas:</label>
+        <div className="priority-box">
+          <div className="priority-label-wrap">
+            <span className="priority-label">Prioritas</span>
+            <span className={`priority-pill ${priorityMeta.cls}`}>
+              <span>{priorityMeta.icon}</span> {priorityMeta.label}
+            </span>
+          </div>
+
           <select
-            value={report.priority || "MEDIUM"}
+            className={`priority-select ${priorityMeta.cls}`}
+            value={priorityValue}
             onChange={(e) => onPriorityChange(report.id, e.target.value)}
           >
-            <option value="LOW">LOW</option>
-            <option value="MEDIUM">MEDIUM</option>
-            <option value="HIGH">HIGH</option>
+            <option value="LOW">LOW • Rendah</option>
+            <option value="MEDIUM">MEDIUM • Sedang</option>
+            <option value="HIGH">HIGH • Tinggi</option>
           </select>
         </div>
       </div>
