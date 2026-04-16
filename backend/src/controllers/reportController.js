@@ -23,7 +23,6 @@ exports.createReport = async (req, res) => {
         Key: fileKey,
         Body: req.file.buffer,
         ContentType: req.file.mimetype,
-        ACL: "public-read"
       })
     );
 
