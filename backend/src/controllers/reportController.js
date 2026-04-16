@@ -10,24 +10,28 @@ exports.createReport = async (req, res) => {
     if (!title || !description || !address || !latitude || !longitude) {
       return res.status(400).json({ message: "Semua field wajib diisi" });
     }
+
     if (!req.file) {
       return res.status(400).json({ message: "Foto wajib diupload" });
     }
 
     const fileKey = `reports/${Date.now()}-${uuidv4()}-${req.file.originalname}`;
 
-    await s3.send(new PutObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME,
-      Key: fileKey,
-      Body: req.file.buffer,
-      ContentType: req.file.mimetype
-    }));
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: fileKey,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+        ACL: "public-read"
+      })
+    );
 
-    const imageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
+    const imageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${encodeURIComponent(fileKey).replace(/%2F/g, "/")}`;
 
     const [result] = await pool.execute(
-      `INSERT INTO reports (title, description, address, latitude, longitude, image_url, status)
-       VALUES (?, ?, ?, ?, ?, ?, 'PENDING')`,
+      `INSERT INTO reports (title, description, address, latitude, longitude, image_url, status, priority)
+       VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 'MEDIUM')`,
       [title, description, address, latitude, longitude, imageUrl]
     );
 
@@ -64,9 +68,33 @@ exports.updateReportStatus = async (req, res) => {
 
     const [rows] = await pool.execute("SELECT * FROM reports WHERE id = ?", [id]);
     if (!rows.length) return res.status(404).json({ message: "Laporan tidak ditemukan" });
+
     return res.json(rows[0]);
   } catch (error) {
     return res.status(500).json({ message: "Gagal update status", error: error.message });
+  }
+};
+
+exports.updateReportPriority = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { priority } = req.body;
+
+    if (!["LOW", "MEDIUM", "HIGH"].includes(priority)) {
+      return res.status(400).json({ message: "Prioritas tidak valid" });
+    }
+
+    await pool.execute(
+      "UPDATE reports SET priority = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      [priority, id]
+    );
+
+    const [rows] = await pool.execute("SELECT * FROM reports WHERE id = ?", [id]);
+    if (!rows.length) return res.status(404).json({ message: "Laporan tidak ditemukan" });
+
+    return res.json(rows[0]);
+  } catch (error) {
+    return res.status(500).json({ message: "Gagal update prioritas", error: error.message });
   }
 };
 

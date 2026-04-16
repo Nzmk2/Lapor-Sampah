@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const reportRoutes = require("./routes/reportRoutes");
+const scheduleRoutes = require("./routes/scheduleRoutes");
 
 const app = express();
 
@@ -12,5 +13,6 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/reports", reportRoutes);
+app.use("/api/schedules", scheduleRoutes);
 
 module.exports = app;

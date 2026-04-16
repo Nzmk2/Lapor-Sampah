@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function ReportCard({ report, onStatusChange, onDelete }) {
+function ReportCard({ report, onStatusChange, onDelete, onPriorityChange }) {
   const [showPhoto, setShowPhoto] = useState(false);
 
   const formatDate = (date) => {
@@ -14,9 +14,9 @@ function ReportCard({ report, onStatusChange, onDelete }) {
 
   const getStatusBadge = (status) => {
     const map = {
-      PENDING:     { cls: "badge-pending",  dot: true, label: "Menunggu"  },
-      IN_PROGRESS: { cls: "badge-progress", dot: true, label: "Diproses"  },
-      DONE:        { cls: "badge-done",     dot: true, label: "Selesai"   },
+      PENDING: { cls: "badge-pending", dot: true, label: "Menunggu" },
+      IN_PROGRESS: { cls: "badge-progress", dot: true, label: "Diproses" },
+      DONE: { cls: "badge-done", dot: true, label: "Selesai" }
     };
     return map[status] || { cls: "badge-pending", dot: true, label: status };
   };
@@ -60,13 +60,23 @@ function ReportCard({ report, onStatusChange, onDelete }) {
           </div>
         )}
 
-        {report.description && (
-          <p className="report-description">{report.description}</p>
-        )}
+        {report.description && <p className="report-description">{report.description}</p>}
 
         <span className="report-coords">
           {Number(report.latitude).toFixed(6)}, {Number(report.longitude).toFixed(6)}
         </span>
+
+        <div style={{ marginTop: 8 }}>
+          <label style={{ fontSize: 12, marginRight: 8 }}>Prioritas:</label>
+          <select
+            value={report.priority || "MEDIUM"}
+            onChange={(e) => onPriorityChange(report.id, e.target.value)}
+          >
+            <option value="LOW">LOW</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="HIGH">HIGH</option>
+          </select>
+        </div>
       </div>
 
       <div className="report-card-actions">
@@ -86,11 +96,7 @@ function ReportCard({ report, onStatusChange, onDelete }) {
             ✓ Selesai
           </button>
         )}
-        <button
-          className="btn-icon-only ml-auto"
-          onClick={() => onDelete(report.id)}
-          title="Hapus laporan"
-        >
+        <button className="btn-icon-only ml-auto" onClick={() => onDelete(report.id)} title="Hapus laporan">
           🗑
         </button>
       </div>
