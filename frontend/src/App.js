@@ -115,8 +115,9 @@ function App() {
 
       <main className="main">
         {!isAdmin && (
-          <div className="content-card">
+          <div className="content-card" style={{ display: "grid", gap: 16 }}>
             <CreateReport onSubmit={handleReportSubmit} />
+            <SchedulePanel readOnly />
           </div>
         )}
 
